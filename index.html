@@ -374,7 +374,7 @@ footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px so
 
 </div>
 <script src="assets/vendor/three.min.js"></script>
-<script src="assets/vendor/OrbitControls.js"></script>
+<script src="assets/vendor/TrackballControls.js"></script>
 <script>
 (function(){ const el=document.querySelector('.long-viewer'); if(!el) return; const files=["assets/long/long_Colon_2_forward__crm.js", "assets/long/long_Colon_2_forward__endo3r.js", "assets/long/long_Colon_2_forward__gt.js", "assets/long/long_Colon_2_forward__omega_sft.js", "assets/long/long_Colon_2_forward__pre_omega.js", "assets/long/long_Colon_2_forward__pre_vggt.js", "assets/long/long_Colon_2_forward__sm4rt.js"];
  el.innerHTML='<div class="lv-loading">loading 3D viewer data…</div>'; const msg=t=>{ const l=el.querySelector('.lv-loading'); if(l) l.textContent=t; };

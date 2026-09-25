@@ -30,7 +30,9 @@
     renderer.setClearColor(0xffffff, 1); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(W, H); canvasBox.appendChild(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff);
     const cam = new THREE.PerspectiveCamera(40, W / H, 1, 100000);
-    const controls = new THREE.OrbitControls(cam, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.08;
+    // TrackballControls: free rotation in every direction (OrbitControls stops at the poles).  No inertia, so a frame
+    // is drawn only on a real change and the on-demand render loop stays simple.
+    const controls = new THREE.TrackballControls(cam, renderer.domElement); controls.staticMoving = true; controls.rotateSpeed = 2.5; controls.zoomSpeed = 1.2; controls.panSpeed = 0.6;
     // zoom limits: the home view sits at 0.9 x the scene diagonal; allow 3x closer and 2x farther, no further
 
     const decoded = {}; function get(k) { if (!decoded[k]) decoded[k] = decode(D[k]); return decoded[k]; }
@@ -42,7 +44,7 @@
     // OrbitControls drag in the opposite direction -- the whole scene is turned 180 deg about x and the camera keeps +y up
     const root = new THREE.Group(); root.rotation.x = Math.PI; scene.add(root);
     const centreR = new THREE.Vector3(centre.x, -centre.y, -centre.z);
-    const home = () => { cam.position.copy(centreR).add(new THREE.Vector3(0.35, 0.9, 0.5).normalize().multiplyScalar(diag * 0.9)); cam.up.set(0, 1, 0); cam.lookAt(centreR); controls.target.copy(centreR); controls.update(); };
+    const home = () => { controls.reset(); cam.position.copy(centreR).add(new THREE.Vector3(0.35, 0.9, 0.5).normalize().multiplyScalar(diag * 0.9)); cam.up.set(0, 1, 0); cam.lookAt(centreR); controls.target.copy(centreR); controls.update(); };
     controls.minDistance = diag * 0.3; controls.maxDistance = diag * 1.8;
     home();
 
@@ -105,13 +107,17 @@
     function loop(now) {
       raf = 0; const dt = last ? Math.min(0.1, (now - last) / 1000) : 0; last = now;
       if (playing) { progress = Math.min(1, progress + dt / 25); applyProgress(); if (progress >= 1) { playing = false; play.textContent = "▶"; } }
-      const moving = onScreen && controls.update(); if (onScreen) renderer.render(scene, cam);
-      if (playing || moving) requestRender(); else last = 0;
+      if (onScreen) { controls.update(); renderer.render(scene, cam); }
+      if (playing || interacting) requestRender(); else last = 0;
     }
-    controls.addEventListener("change", requestRender); controls.addEventListener("start", requestRender);
+    // TrackballControls only notices pointer / wheel input inside update(): keep rendering from "start" until "end"
+    let interacting = false;
+    controls.addEventListener("start", () => { interacting = true; requestRender(); });
+    controls.addEventListener("end", () => { interacting = false; requestRender(); });
+    controls.addEventListener("change", requestRender);
     new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) requestRender(); else if (raf && !playing) { cancelAnimationFrame(raf); raf = 0; last = 0; } }).observe(canvasBox);
     document.addEventListener("visibilitychange", () => { if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = 0; } last = 0; } else requestRender(); });
-    window.addEventListener("resize", () => { const w = el.clientWidth; renderer.setSize(w, H); cam.aspect = w / H; cam.updateProjectionMatrix();  requestRender(); });
+    window.addEventListener("resize", () => { const w = el.clientWidth; renderer.setSize(w, H); cam.aspect = w / H; cam.updateProjectionMatrix(); controls.handleResize(); requestRender(); });
     setMethod(el.dataset.method || "crm"); requestRender();
   }
   document.querySelectorAll(".long-viewer").forEach(build);
