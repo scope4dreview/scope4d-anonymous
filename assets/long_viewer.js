@@ -37,7 +37,12 @@
     const centre = new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
     const diag = Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
     // initial view: the paper's fixed direction is data-derived; here a diagonal view that shows the whole colon
-    cam.position.copy(centre).add(new THREE.Vector3(0.35, -0.9, -0.5).normalize().multiplyScalar(diag * 0.9)); cam.up.set(0, -1, 0); cam.lookAt(centre); controls.target.copy(centre); controls.update();
+    // the data's y axis points down (image convention).  Instead of flipping the camera's up vector -- which makes
+    // OrbitControls drag in the opposite direction -- the whole scene is turned 180 deg about x and the camera keeps +y up
+    const root = new THREE.Group(); root.rotation.x = Math.PI; scene.add(root);
+    const centreR = new THREE.Vector3(centre.x, -centre.y, -centre.z);
+    const home = () => { cam.position.copy(centreR).add(new THREE.Vector3(0.35, 0.9, 0.5).normalize().multiplyScalar(diag * 0.9)); cam.up.set(0, 1, 0); cam.lookAt(centreR); controls.target.copy(centreR); controls.update(); };
+    home();
 
     function pointsObj(d, size, opacity) {
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(d.pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(d.col, 3, true));
@@ -48,16 +53,16 @@
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(arr, 3)); g.setDrawRange(0, n);
       return new THREE.Line(g, new THREE.LineBasicMaterial({ color, linewidth: 2 }));
     }
-    const gtPts = pointsObj(gt, diag * 0.0025, 0.35); gtPts.visible = false; scene.add(gtPts);
-    const gtLine = lineObj(gt.gtc, GT_RGB, gt.gtc.length / 3); scene.add(gtLine);
-    const marker = new THREE.Mesh(new THREE.SphereGeometry(diag * 0.008, 16, 16), new THREE.MeshBasicMaterial({ color: PRED_RGB })); scene.add(marker);
+    const gtPts = pointsObj(gt, diag * 0.0025, 0.35); gtPts.visible = false; root.add(gtPts);
+    const gtLine = lineObj(gt.gtc, GT_RGB, gt.gtc.length / 3); root.add(gtLine);
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(diag * 0.008, 16, 16), new THREE.MeshBasicMaterial({ color: PRED_RGB })); root.add(marker);
 
     let cur = null, curKey = null, progress = 1, playing = false;
     const state = { showGT: false, showGTpath: true };
     function setMethod(k) {
-      if (cur) { scene.remove(cur.pts); scene.remove(cur.line); cur.pts.geometry.dispose(); cur.line.geometry.dispose(); }
+      if (cur) { root.remove(cur.pts); root.remove(cur.line); cur.pts.geometry.dispose(); cur.line.geometry.dispose(); }
       const d = get(k); const pts = pointsObj(d, diag * 0.0025, 1); const line = lineObj(d.cams, PRED_RGB, d.cams.length / 3);
-      scene.add(pts); scene.add(line); cur = { d, pts, line }; curKey = k;
+      root.add(pts); root.add(line); cur = { d, pts, line }; curKey = k;
       bar.querySelectorAll("button[data-m]").forEach(b => b.setAttribute("aria-selected", b.dataset.m === k ? "true" : "false"));
       applyProgress();
       const al = D[k].align; foot.textContent = `${labelOf(k)}` + (al ? ` · ATE ${al.ate_mm.toFixed(1)} mm` : "") + " · drag to rotate, scroll to zoom";
@@ -89,7 +94,7 @@
     iGT.onchange = () => { state.showGT = iGT.checked; gtPts.visible = state.showGT; requestRender(); };
     iP.onchange = () => { state.showGTpath = iP.checked; gtLine.visible = state.showGTpath; requestRender(); };
     play.onclick = () => { playing = !playing; play.textContent = playing ? "❚❚" : "▶"; requestRender(); if (playing && progress >= 1) progress = 0; };
-    reset.onclick = () => { cam.position.copy(centre).add(new THREE.Vector3(0.35, -0.9, -0.5).normalize().multiplyScalar(diag * 0.9)); cam.up.set(0, -1, 0); controls.target.copy(centre); controls.update();  requestRender(); };
+    reset.onclick = () => { home(); requestRender(); };
     // on-demand rendering: a frame is drawn only while replaying, while the orbit controls are still moving
     // (damping), or once after a change.  Scrolling the viewer off screen does not pause a replay: its clock keeps
     // running and only drawing is skipped.  A hidden tab stops everything (the replay resumes where it was).
