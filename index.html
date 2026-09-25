@@ -184,7 +184,7 @@ footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px so
 
 <section>
 <h2>Abstract</h2>
-<p>Reliable endoscopic geometry is limited by scarce geometric annotations and ambiguity between camera motion and tissue deformation. We present <b>SCOPE-4D</b>, an endoscopic 4D geometry foundation model that jointly predicts camera parameters, dense geometry, and 3D tissue trajectories from monocular RGB video in a single forward pass. Our curation and annotation pipeline constructs <b>SCOPE-5K</b>, a collection of approximately 5,000 clips spanning real and synthetic gastrointestinal endoscopy and laparoscopy. It includes geometric supervision and new phantom and real-colonoscopy benchmarks. Geometric supervised fine-tuning on SCOPE-5K improves camera and depth estimation. <b>Common–Residual Motion (CRM)</b> constrains local deformation relative to common tissue movement. Combined with geometric and trajectory supervision, CRM enables dense 3D tissue tracking and further improves geometry over geometric fine-tuning alone. Evaluations show strong cross-domain geometry, superior 3D tracking, and more stable long-sequence colon reconstruction. A blinded study supports perceived reconstruction quality on clinical video.</p>
+<p>Geometric understanding supports endoscopic navigation and robotic assistance, but learning reliable endoscopic geometry faces two challenges: scarce geometric annotations and ambiguity between camera motion and tissue deformation. We present <b>SCOPE-4D</b>, an endoscopic 4D geometry foundation model that jointly predicts camera parameters, dense geometry, and 3D tissue trajectories from monocular RGB video in a single forward pass. Our curation and annotation pipeline constructs <b>SCOPE-5K</b>, a collection of approximately 5,000 clips spanning real and synthetic gastrointestinal endoscopy and laparoscopy. The collection provides rich geometric supervision and includes newly collected phantom and real-colonoscopy evaluation sets. Geometric supervised fine-tuning on SCOPE-5K learns endoscopic priors that improve camera and depth estimation. <b>Common–Residual Motion (CRM)</b> further constrains local deformation relative to common tissue movement. Together with geometric supervision, CRM and trajectory supervision further improve camera and depth estimation over geometric fine-tuning alone while enabling dense 3D tissue tracking. Evaluations on public and newly collected benchmarks demonstrate strong in-domain and out-of-domain geometry, superior 3D tracking, and more stable long-sequence colon reconstruction. A blinded user study further supports the perceived reconstruction quality on real clinical video. Together, these results demonstrate the value of large-scale endoscopic supervision and motion constraints for joint geometry estimation and tissue tracking.</p>
 </section>
 
 <section>
@@ -194,13 +194,13 @@ footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px so
 
 <section>
 <h2>Method</h2>
-<p>SCOPE-4D builds on a feed-forward multi-view transformer. Geometric fine-tuning on SCOPE-5K supervises camera and dense depth. CRM represents each 3D point's motion as a shared <i>common</i> motion plus a <i>local residual</i>. Together with geometric supervision, CRM and trajectory supervision enable dense 3D tissue tracking and further improve camera and depth estimation over geometric fine-tuning alone.</p>
+<p>SCOPE-4D builds on a feed-forward multi-view transformer. Geometric fine-tuning on SCOPE-5K supervises camera and dense depth. CRM represents each 3D point's motion as a shared <i>common</i> motion plus a <i>local residual</i>. Together with geometric supervision, CRM and trajectory supervision further improve camera and depth estimation over geometric fine-tuning alone while enabling dense 3D tissue tracking.</p>
 <figure><img src="assets/method.png" alt="SCOPE-4D method"></figure>
 </section>
 
 <section>
 <h2>SCOPE-5K data</h2>
-<p>Real endoscopic video rarely comes with geometry. Our pipeline (panel a of the method figure) turns raw videos into clips with camera and depth labels: screening and clipping, per-clip structure-from-motion with tracking-based correspondences, dense labels from a camera-conditioned geometry model, and an automatic quality-control stage that accepts, flags or rejects each clip.</p>
+<p>Real endoscopic video rarely comes with geometry. Our pipeline (panel a of the method figure) turns raw videos into clips with camera and depth labels: screening and clipping, per-clip structure-from-motion with tracking-based correspondences, dense labels from a camera-conditioned geometry model, and an automatic quality-control stage that accepts, flags or rejects each clip. For StereoMIS, depth comes from calibrated stereo (Stereo Any Video) and camera poses from robot kinematics.</p>
 <h3>Data composition</h3>
 <div class="tscroll">
 <table>
