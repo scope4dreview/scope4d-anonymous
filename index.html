@@ -11,7 +11,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-sy
 .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
 header{text-align:center;padding:56px 0 24px}
 h1{font-size:2.1rem;line-height:1.2;margin:0 0 8px;font-weight:700}
-.sub{font-size:1.15rem;color:var(--muted);margin:0 0 14px}
+.sub{font-size:1.15rem;color:var(--muted);margin:0 0 6px}.sub b{color:var(--ink)}.sub2{font-size:1rem;margin-bottom:14px}
 .authors{color:var(--muted);margin:0 0 18px}
 .links a{display:inline-block;margin:4px 6px;padding:8px 16px;border:1px solid var(--ink);border-radius:999px;color:var(--ink);text-decoration:none;font-size:.95rem}
 .links a.dis{opacity:.4;pointer-events:none}
@@ -118,7 +118,8 @@ footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px so
 
 <header>
 <h1>SCOPE-4D: Endoscopic 4D Geometry Foundation Models</h1>
-<p class="sub">Camera, dense geometry and 3D tissue trajectories from monocular video, in one forward pass</p>
+<p class="sub"><b>S</b>eparating <b>C</b>amera and <b>O</b>rgan Motion for <b>P</b>recise <b>E</b>ndoscopic 4D Geometry</p>
+<p class="sub sub2">Camera, dense geometry and 3D tissue trajectories from monocular video, in one forward pass</p>
 <p class="authors">Anonymous authors &middot; ICLR 2027 submission</p>
 
 <nav class="contrib" aria-label="Contributions">
@@ -183,7 +184,7 @@ footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px so
 
 <section>
 <h2>Abstract</h2>
-<p>Geometric understanding supports endoscopic navigation and robotic assistance, but learning reliable endoscopic geometry faces two challenges: scarce geometric annotations, and ambiguity between camera motion and tissue deformation. We present <b>SCOPE-4D</b>, an endoscopic 4D geometry foundation model that jointly predicts camera parameters, dense geometry and 3D tissue trajectories from monocular RGB video in a single forward pass. Our curation and annotation pipeline constructs <b>SCOPE-5K</b>, about 5,000 clips spanning real and synthetic gastrointestinal endoscopy and laparoscopy, with newly collected phantom and real-colonoscopy evaluation sets. Geometric supervised fine-tuning on SCOPE-5K learns endoscopic priors that improve camera and depth estimation. <b>Common–Residual Motion (CRM)</b> further constrains local deformation relative to common tissue movement, enabling dense 3D tissue tracking and further improving camera and depth estimation. Evaluations on public and new benchmarks show strong in-domain and out-of-domain geometry, superior 3D tracking, and more stable long-sequence colon reconstruction; a blinded study with vision specialists supports perceived reconstruction quality on real clinical video.</p>
+<p>Geometric understanding supports endoscopic navigation and robotic assistance, but learning reliable endoscopic geometry faces two challenges: scarce geometric annotations, and ambiguity between camera motion and tissue deformation. We present <b>SCOPE-4D</b>: <b>S</b>eparating <b>C</b>amera and <b>O</b>rgan Motion for <b>P</b>recise <b>E</b>ndoscopic 4D Geometry. This endoscopic 4D geometry foundation model jointly predicts camera parameters, dense geometry and 3D tissue trajectories from monocular RGB video in a single forward pass. Our curation and annotation pipeline constructs <b>SCOPE-5K</b>, about 5,000 clips spanning real and synthetic gastrointestinal endoscopy and laparoscopy, with newly collected phantom and real-colonoscopy evaluation sets. Geometric supervised fine-tuning on SCOPE-5K learns endoscopic priors that improve camera and depth estimation. <b>Common–Residual Motion (CRM)</b> further constrains local deformation relative to common tissue movement. Together with geometric supervision, CRM and trajectory supervision enable dense 3D tissue tracking and further improve camera and depth estimation over geometric fine-tuning alone. Evaluations on public and new benchmarks show strong in-domain and out-of-domain geometry, superior 3D tracking, and more stable long-sequence colon reconstruction; a blinded study with vision specialists supports perceived reconstruction quality on real clinical video.</p>
 </section>
 
 <section>
@@ -193,7 +194,7 @@ footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px so
 
 <section>
 <h2>Method</h2>
-<p>SCOPE-4D builds on a feed-forward multi-view transformer. Geometric fine-tuning on SCOPE-5K supervises camera and dense depth. CRM represents every 3D point's motion as a shared <i>common</i> motion plus a <i>local residual</i>, and supervises the assignment so that residuals are small where tissue simply follows the common motion; this gives the model a way to separate tissue movement from camera motion without a hand-designed rigidity gate.</p>
+<p>SCOPE-4D builds on a feed-forward multi-view transformer. Geometric fine-tuning on SCOPE-5K supervises camera and dense depth. CRM represents each 3D point's motion as a shared <i>common</i> motion plus a <i>local residual</i>, which constrains deformation and supports dense 3D tissue tracking.</p>
 <figure><img src="assets/method.png" alt="SCOPE-4D method"></figure>
 </section>
 
