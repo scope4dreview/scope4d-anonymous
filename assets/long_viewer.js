@@ -31,6 +31,7 @@
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff);
     const cam = new THREE.PerspectiveCamera(40, W / H, 1, 100000);
     const controls = new THREE.OrbitControls(cam, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.08;
+    // zoom limits: the home view sits at 0.9 x the scene diagonal; allow 3x closer and 2x farther, no further
 
     const decoded = {}; function get(k) { if (!decoded[k]) decoded[k] = decode(D[k]); return decoded[k]; }
     const gt = get("gt"); const lo = D.gt.bbox_lo, hi = D.gt.bbox_hi;
@@ -42,6 +43,7 @@
     const root = new THREE.Group(); root.rotation.x = Math.PI; scene.add(root);
     const centreR = new THREE.Vector3(centre.x, -centre.y, -centre.z);
     const home = () => { cam.position.copy(centreR).add(new THREE.Vector3(0.35, 0.9, 0.5).normalize().multiplyScalar(diag * 0.9)); cam.up.set(0, 1, 0); cam.lookAt(centreR); controls.target.copy(centreR); controls.update(); };
+    controls.minDistance = diag * 0.3; controls.maxDistance = diag * 1.8;
     home();
 
     function pointsObj(d, size, opacity) {
