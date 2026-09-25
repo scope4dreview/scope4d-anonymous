@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SCOPE-4D</title>
+<meta name="description" content="SCOPE-4D: an endoscopic 4D geometry foundation model predicting camera, dense geometry and 3D tissue trajectories from monocular video.">
+<script>document.documentElement.classList.add("js");if(/[?&]diag=1(&|$)/.test(location.search)){const s=document.createElement("script");s.src="assets/diag.js";document.head.appendChild(s);}</script>
+<style>
+:root{--ink:#1a1a1a;--muted:#666;--line:#e6e6e6;--accent:#b3261e;--bg:#fff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{text-align:center;padding:56px 0 24px}
+h1{font-size:2.1rem;line-height:1.2;margin:0 0 8px;font-weight:700}
+.sub{font-size:1.15rem;color:var(--muted);margin:0 0 14px}
+.authors{color:var(--muted);margin:0 0 18px}
+.links a{display:inline-block;margin:4px 6px;padding:8px 16px;border:1px solid var(--ink);border-radius:999px;color:var(--ink);text-decoration:none;font-size:.95rem}
+.links a.dis{opacity:.4;pointer-events:none}
+section{padding:36px 0;border-top:1px solid var(--line)}
+h2{font-size:1.45rem;margin:0 0 14px}
+h3{font-size:1.05rem;margin:22px 0 8px}
+p{margin:0 0 12px}
+p.cap{color:var(--muted);font-size:.92rem;margin-top:8px}
+figure{margin:0}
+img,video{display:block;max-width:100%;height:auto;background:#fff}
+.hero{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 6px}
+.hero.two-tiles{grid-template-columns:1fr 1fr;max-width:820px;margin-left:auto;margin-right:auto}
+.herohead{font-size:1.15rem;margin:28px 0 8px;text-align:left}.herohead .sub{font-weight:400;color:var(--muted);font-size:.95rem;margin-left:8px}
+.d5k{display:grid;grid-template-columns:7.6fr 2.4fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.dpart{padding:10px 12px 12px}.dpart.eval{background:#f7f8fc;border-left:2px dashed #b9c2dc}
+.dpart-h{font-size:.85rem;color:var(--muted);margin-bottom:8px;text-align:left}.dpart-h .tag{display:inline-block;font-weight:700;font-size:.78rem;letter-spacing:.03em;text-transform:uppercase;padding:2px 9px;border-radius:999px;margin-right:6px;color:#fff}
+.dpart.train .tag{background:#2f6f4f}.dpart.eval .tag{background:#3d4f8a}
+.dgrid{display:grid;grid-template-columns:1fr 1fr 1fr 1.45fr 1.45fr 1fr 1fr;gap:10px;text-align:left;align-items:start}.dgrid.ood{grid-template-columns:1fr 1fr}
+@media(max-width:1100px){.d5k{grid-template-columns:1fr}.dpart.eval{border-left:none;border-top:2px dashed #b9c2dc}.dgrid{grid-template-columns:repeat(3,1fr)}}
+.dcol.feat{background:#f4faf5;border:1px solid #cfe6d5;border-radius:10px;padding:8px}.dcol.feat .dname{font-size:1rem}
+.dname{font-weight:600;font-size:.9rem;line-height:1.25}.dname .n{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.badges{margin:4px 0 6px;display:flex;flex-wrap:wrap;gap:3px;min-height:18px}.bdg{white-space:nowrap}.bdg{font-size:.68rem;padding:1px 7px;border-radius:999px;background:#eee;color:#333}.bdg.gi{background:#f2dcc8;color:#7a3d00}.bdg.lap{background:#d3e3f0;color:#123c5c}.bdg.mk{background:#e6f4ea;color:#1c5c2e}
+.dgrid .tile video{aspect-ratio:4/3;object-fit:contain;width:100%}.dgrid .tile .lab{font-size:.75rem;padding:3px 6px}
+.hero.cmp{grid-template-columns:repeat(6,1fr)}.colhead.span3{grid-column:span 3;border-bottom:1px solid var(--line)}.hero.cmp4{grid-template-columns:repeat(4,1fr)}
+.colhead{font-size:.85rem;color:var(--muted);text-align:center;padding-bottom:2px}.colhead.span2{grid-column:span 2;border-bottom:1px solid var(--line)}
+.tile.ours .lab{font-weight:600;color:var(--ink)}
+.trkgrid{grid-template-columns:0.7fr repeat(4,1fr)}
+.hero .tile{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.hero .tile video{aspect-ratio:4/3;object-fit:contain;width:100%}
+
+.hero .lab{font-size:.9rem;color:var(--muted);padding:6px 10px;border-top:1px solid var(--line)}
+.frame{border:1px solid var(--line);border-radius:8px;overflow:hidden;padding:8px;background:#fff}
+.wide{width:min(96vw,1500px);margin-left:calc(50% - min(48vw,750px))}
+@media(max-width:1100px){.wide{width:100%;margin-left:0}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pill{display:inline-block;font-size:.78rem;padding:2px 8px;border-radius:999px;background:#f3f3f3;color:#444;margin-left:6px;vertical-align:middle}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:10px 0}
+th,td{padding:5px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:#333;border-bottom:1px solid #999}
+td:first-child,th:first-child{text-align:left}
+tr.ours td{background:#fff6f5}
+td.b{font-weight:700}td.u{text-decoration:underline}
+tr.grp td{font-style:italic;color:var(--muted);text-align:left;border-bottom:none;padding-top:10px}
+.tabs{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:#fafafa;padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.9rem}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tab{display:none;overflow-x:auto}.tab.on{display:block}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:12px 0}
+summary{cursor:pointer;font-weight:600}
+pre{background:#f6f6f6;padding:14px;border-radius:8px;overflow-x:auto;font-size:.85rem}
+.trkgrid{display:grid;gap:10px;align-items:start;margin-bottom:10px}
+.trkgrid.two-up{grid-template-columns:1fr 1.6fr;max-width:1100px;margin-left:auto;margin-right:auto}
+.trk-tile video{width:100%;display:block}
+.trk-tile,.trk-ref{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.trk-ref img{width:100%;display:block}.trk-ref img+img{border-top:1px solid var(--line)}
+.trkgrid .lab{font-size:.85rem;color:var(--muted);padding:5px 8px;border-top:1px solid var(--line);text-align:center}
+@media(max-width:720px){.trkgrid{grid-template-columns:1fr 1fr}}
+.tile,.trk-tile,.frame{position:relative;contain:layout paint}
+video.gv{background:#fff;cursor:pointer}
+.gbar{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);padding:4px 2px 0;min-height:28px;flex-wrap:wrap}
+.gbar.span-all{grid-column:1/-1}.gbar.span2{grid-column:span 2}
+.gbar button{border:1px solid var(--line);background:#fafafa;border-radius:999px;min-width:30px;height:26px;padding:0 9px;cursor:pointer;font:inherit;color:var(--ink)}
+.gbar button:focus-visible,.gbar input:focus-visible,.pauseall:focus-visible,.vretry:focus-visible,.vplay:focus-visible{outline:2px solid #3d4f8a;outline-offset:1px}
+.gbar .gb-tl{flex:1 1 140px;min-width:100px;accent-color:#555}.gbar .gb-pos{font-variant-numeric:tabular-nums;min-width:56px}
+.gb-stat.busy::before,.vchip.busy::before{content:'';display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.frame>.gbar{padding:6px 4px 2px}
+.vchip{position:absolute;left:6px;top:6px;z-index:4;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:.7rem;color:#333;pointer-events:none;max-width:calc(100% - 12px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vretry{position:absolute;right:40px;top:8px;z-index:2;font-size:.7rem;border:1px solid var(--line);background:#fff;border-radius:999px;padding:1px 8px;cursor:pointer}
+.v-loading,.v-queued{background:#f2f2f2!important}.v-loading video,.v-queued video{visibility:hidden}
+.v-loading::after,.v-queued::after{content:'';position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-18px 0 0 -18px;z-index:3;border:3px solid #d9d9d9;border-top-color:#333;border-radius:50%;background:rgba(255,255,255,.8);box-shadow:0 1px 4px rgba(0,0,0,.15);animation:spin .9s linear infinite;pointer-events:none}
+.v-queued::after{border-top-color:#999;animation-duration:1.6s}
+.dcol .tile.v-loading::after,.dcol .tile.v-queued::after{top:22%}
+.vplay{position:absolute;right:6px;top:6px;z-index:2;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.92);font-size:.72rem;line-height:1;cursor:pointer;color:#333;padding:0}
+.pauseall{position:fixed;right:14px;bottom:14px;z-index:20;border:1px solid var(--line);background:rgba(255,255,255,.95);border-radius:999px;padding:6px 14px;font:inherit;font-size:.82rem;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+@media(max-width:720px){.gbar.span2{grid-column:1/-1}.pauseall{right:8px;bottom:8px;font-size:.75rem;padding:5px 11px}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tabsub{font-size:.95rem;margin:14px 0 4px}
+.legend{text-align:center}.lg-pred,.lg-gt{display:inline-block;width:22px;vertical-align:middle}.lg-pred{border-top:2px solid #1f5fbf}.lg-gt{border-top:2px dashed #d0342c}.lg-gap{display:inline-block;width:28px}
+.ustable{margin:6px 0;width:100%}.ustable td,.ustable th{white-space:normal}.ustable .ci{display:block;margin-left:0}.res2{grid-template-columns:1fr 1.15fr;align-items:start;gap:28px}.half{max-width:760px}.usd{margin-top:8px}.usd summary{font-size:.9rem}.ustable td{white-space:nowrap}.ci{color:var(--muted);font-size:.8em;margin-left:4px}
+.lv-loading{padding:60px;text-align:center;color:var(--muted);border:1px solid var(--line);border-radius:8px;min-height:inherit;box-sizing:border-box}
+.long-viewer{min-height:625px}@media(max-width:1100px){.long-viewer{min-height:664px}}@media(max-width:720px){.long-viewer{min-height:798px}}
+.lv-wrap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.lv-bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line);font-size:.88rem}
+.lv-methods{display:flex;flex-wrap:wrap;gap:6px}.lv-methods button,.lv-ctrl button{border:1px solid var(--line);background:#fafafa;padding:4px 10px;border-radius:999px;cursor:pointer;font:inherit;font-size:.85rem}
+.lv-methods button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lv-ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.lv-ctrl input[type=range]{width:200px}.lv-prog{color:var(--muted);min-width:110px}
+.lv-canvas{background:#fff}.lv-canvas canvas{display:block}.lv-foot{padding:6px 10px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
+footer{color:var(--muted);font-size:.85rem;padding:30px 0 50px;border-top:1px solid var(--line)}
+@media(max-width:720px){.hero{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}h1{font-size:1.6rem}}
+</style></head>
+<body><div class="wrap">
+
+<header>
+<h1>SCOPE-4D: Endoscopic 4D Geometry Foundation Models</h1>
+<p class="sub">Camera, dense geometry and 3D tissue trajectories from monocular video, in one forward pass</p>
+<p class="authors">Anonymous authors &middot; ICLR 2027 submission</p>
+
+<h2 class="herohead">SCOPE-5K data <span class="sub">4,910 clips, gastrointestinal endoscopy and laparoscopy</span></h2>
+<div class="d5k wide">
+<div class="dpart train"><div class="dpart-h"><span class="tag">In-domain benchmark</span> training + held-out evaluation · 4,855 clips · 7 sources</div>
+<div class="dgrid">
+<div class="dcol"><div class="dname">SimCol3D<span class="n">33 clips</span></div><div class="badges"><span class="bdg gi">GI</span><span class="bdg">Synthetic</span></div><div class="tile" data-group="data-simcol"><video class="gv" data-src="assets/data_simcol__input.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="406565" data-codec="avc1.640016" width="512" height="512"></video><div class="lab">video</div><video class="gv" data-src="assets/data_simcol__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="364113" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+<div class="dcol"><div class="dname">C3VD<span class="n">112 clips</span></div><div class="badges"><span class="bdg gi">GI</span><span class="bdg">Real</span></div><div class="tile" data-group="data-c3vd"><video class="gv" data-src="assets/data_c3vd__input.mp4" data-frames="123" data-fps="10" muted playsinline preload="none" data-bytes="394294" data-codec="avc1.640016" width="512" height="512"></video><div class="lab">video</div><video class="gv" data-src="assets/data_c3vd__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="265184" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+<div class="dcol"><div class="dname">EndoMapper-Sim<span class="n">5 clips</span></div><div class="badges"><span class="bdg gi">GI</span><span class="bdg">Synthetic</span></div><div class="tile" data-group="data-emsim"><video class="gv" data-src="assets/data_emsim__input.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="509935" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">video</div><video class="gv" data-src="assets/data_emsim__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="412120" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+<div class="dcol feat"><div class="dname">EndoMapper-Real<span class="n">2,379 clips</span></div><div class="badges"><span class="bdg gi">GI</span><span class="bdg">Real</span><span class="bdg mk">our labels</span></div><div class="tile" data-group="data-emreal_Seq_001__c014"><video class="gv" data-src="assets/data_emreal_Seq_001__c014__input.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="262313" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">video</div><video class="gv" data-src="assets/data_emreal_Seq_001__c014__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="435602" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+<div class="dcol feat"><div class="dname">StereoMIS<span class="n">354 clips</span></div><div class="badges"><span class="bdg lap">Laparoscopy</span><span class="bdg">Real</span><span class="bdg mk">our labels</span></div><div class="tile" data-group="data-stereomis"><video class="gv" data-src="assets/data_stereomis__input.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="276887" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">video</div><video class="gv" data-src="assets/data_stereomis__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="263109" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+<div class="dcol"><div class="dname">Sano<span class="n">1,938 clips</span></div><div class="badges"><span class="bdg lap">Laparoscopy</span><span class="bdg">Synthetic</span></div><div class="tile" data-group="data-sano"><video class="gv" data-src="assets/data_sano__input.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="78904" data-codec="avc1.640015" width="512" height="288"></video><div class="lab">video</div><video class="gv" data-src="assets/data_sano__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="617388" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+<div class="dcol"><div class="dname">SCARED<span class="n">34 clips</span></div><div class="badges"><span class="bdg lap">Laparoscopy</span><span class="bdg">Real</span></div><div class="tile" data-group="data-scared"><video class="gv" data-src="assets/data_scared__input.mp4" data-frames="189" data-fps="10" muted playsinline preload="none" data-bytes="680099" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">video</div><video class="gv" data-src="assets/data_scared__label.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="631215" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">label geometry</div></div></div>
+</div></div>
+<div class="dpart eval"><div class="dpart-h"><span class="tag">Out-of-domain benchmark</span> evaluation only · new</div>
+<div class="dgrid ood">
+<div class="dcol"><div class="dname">SCOPE-colon-phantom<span class="n">14 clips</span></div><div class="badges"><span class="bdg gi">GI</span><span class="bdg">Real</span><span class="bdg mk">new</span></div><div class="tile" data-group="data-phantom"><video class="gv" data-src="assets/data_phantom__input.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="337532" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">video</div><video class="gv" data-src="assets/data_phantom__label.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="26239" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">tracked camera path</div></div></div>
+<div class="dcol"><div class="dname">SCOPE-colon-real<span class="n">10 clips</span></div><div class="badges"><span class="bdg gi">GI</span><span class="bdg">Real</span><span class="bdg mk">new</span></div><div class="tile" data-group="data-real"><video class="gv" data-src="assets/data_real__input.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="1630802" data-codec="avc1.640016" width="640" height="556"></video><div class="lab">video</div><video class="gv" data-src="assets/data_real__input2.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="1667750" data-codec="avc1.640016" width="640" height="556"></video><div class="lab">second clip</div></div></div>
+</div></div>
+</div>
+
+<h2 class="herohead">SCOPE-4D: one model, one forward pass</h2>
+<div class="hero cmp wide">
+<div class="colhead"></div><div class="colhead span3">Depth</div><div class="colhead span2">Geometry + cameras</div>
+<div class="tile" data-group="hero1"><video class="gv " data-src="assets/hero_input.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="201170" data-codec="avc1.640016" width="512" height="410"></video><div class="lab">Input video</div></div>
+<div class="tile" data-group="hero1"><video class="gv " data-src="assets/hero_depth_gt.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="127279" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">Ground truth</div></div>
+<div class="tile" data-group="hero1"><video class="gv " data-src="assets/hero_depth_omega.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="127440" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">VGGT-Omega</div></div>
+<div class="tile ours" data-group="hero1"><video class="gv " data-src="assets/hero_depth.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="119175" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="tile" data-group="hero1"><video class="gv " data-src="assets/hero_geometry_omega.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="257672" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">VGGT-Omega</div></div>
+<div class="tile ours" data-group="hero1"><video class="gv " data-src="assets/hero_geometry.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="298387" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="gbar span-all" data-for="hero1"></div>
+<div class="tile" data-group="hero2"><video class="gv " data-src="assets/hero_em_input.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="261857" data-codec="avc1.640016" width="512" height="386"></video><div class="lab">Input video</div></div>
+<div class="tile" data-group="hero2"><video class="gv " data-src="assets/hero_em_depth_gt.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="553141" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">Ground truth</div></div>
+<div class="tile" data-group="hero2"><video class="gv " data-src="assets/hero_em_depth_endo3r.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="46349" data-codec="avc1.64000C" width="320" height="240"></video><div class="lab">Endo3R</div></div>
+<div class="tile ours" data-group="hero2"><video class="gv " data-src="assets/hero_em_depth.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="99642" data-codec="avc1.640015" width="512" height="384"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="tile" data-group="hero2"><video class="gv " data-src="assets/hero_em_geometry_endo3r.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="214743" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">Endo3R</div></div>
+<div class="tile ours" data-group="hero2"><video class="gv " data-src="assets/hero_em_geometry.mp4" data-frames="68" data-fps="10" muted playsinline preload="none" data-bytes="261015" data-codec="avc1.640016" width="720" height="540"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="gbar span-all" data-for="hero2"></div>
+</div>
+<p class="cap">Laparoscopy (top) and colonoscopy (bottom).</p>
+<div class="hero cmp4 wide">
+<div class="colhead span2">3D tissue trajectories: instrument pulling tissue</div><div class="colhead span2">3D tissue trajectories: liver breathing</div>
+<div class="tile" data-group="hero3a"><video class="gv " data-src="assets/hero_tracking_d4rt.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="1805278" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">D4RT*</div></div>
+<div class="tile ours" data-group="hero3a"><video class="gv " data-src="assets/hero_tracking.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="926325" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="tile" data-group="hero3b"><video class="gv " data-src="assets/hero_tracking_breathing_4rc.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="482742" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">4RC</div></div>
+<div class="tile ours" data-group="hero3b"><video class="gv " data-src="assets/hero_tracking_breathing.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="778119" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="gbar span2" data-for="hero3a"></div><div class="gbar span2" data-for="hero3b"></div>
+</div>
+
+<h2 class="herohead">Long sequences</h2>
+<div class="frame wide" data-group="long-hero"><video class="gv " data-src="assets/long_colon2_demo.mp4" data-frames="791" data-fps="15" muted playsinline preload="none" data-bytes="2844033" data-codec="avc1.640028" width="1600" height="766"></video></div>
+
+
+</header>
+
+<section>
+<h2>Abstract</h2>
+<p>Geometric understanding supports endoscopic navigation and robotic assistance, but learning reliable endoscopic geometry faces two challenges: scarce geometric annotations, and ambiguity between camera motion and tissue deformation. We present <b>SCOPE-4D</b>, an endoscopic 4D geometry foundation model that jointly predicts camera parameters, dense geometry and 3D tissue trajectories from monocular RGB video in a single forward pass. Our curation and annotation pipeline constructs <b>SCOPE-5K</b>, about 5,000 clips spanning real and synthetic gastrointestinal endoscopy and laparoscopy, with newly collected phantom and real-colonoscopy evaluation sets. Geometric supervised fine-tuning on SCOPE-5K learns endoscopic priors that improve camera and depth estimation. <b>Common–Residual Motion (CRM)</b> further constrains local deformation relative to common tissue movement, enabling dense 3D tissue tracking and further improving camera and depth estimation. Evaluations on public and new benchmarks show strong in-domain and out-of-domain geometry, superior 3D tracking, and more stable long-sequence colon reconstruction; a blinded study with vision specialists supports perceived reconstruction quality on real clinical video.</p>
+<figure><img src="assets/teaser.png" alt="SCOPE-4D overview"></figure>
+</section>
+
+<section>
+<h2>Method</h2>
+<p>SCOPE-4D builds on a feed-forward multi-view transformer. Geometric fine-tuning on SCOPE-5K supervises camera and dense depth. CRM represents every 3D point's motion as a shared <i>common</i> motion plus a <i>local residual</i>, and supervises the assignment so that residuals are small where tissue simply follows the common motion; this gives the model a way to separate tissue movement from camera motion without a hand-designed rigidity gate.</p>
+<figure><img src="assets/method.png" alt="SCOPE-4D method"></figure>
+</section>
+
+<section>
+<h2>SCOPE-5K data</h2>
+<p>Real endoscopic video rarely comes with geometry. Our pipeline (panel a of the method figure) turns raw videos into clips with camera and depth labels: screening and clipping, per-clip structure-from-motion with tracking-based correspondences, dense labels from a camera-conditioned geometry model, and an automatic quality-control stage that accepts, flags or rejects each clip from cross-source agreement rather than appearance.</p>
+<h3>Data composition</h3>
+
+<table>
+<thead><tr><th>Data source</th><th>GI</th><th>Laparo</th><th>Synthetic</th><th>Real</th><th>Depth</th><th>Camera</th><th>Clips</th></tr></thead>
+<tbody>
+<tr><td>EndoMapper-Real</td><td>✓</td><td></td><td></td><td>✓</td><td>✓†</td><td>✓†</td><td>2,379</td></tr>
+<tr><td>C3VD</td><td>✓</td><td></td><td></td><td>✓</td><td>✓</td><td>✓</td><td>112</td></tr>
+<tr><td>SimCol3D</td><td>✓</td><td></td><td>✓</td><td></td><td>✓</td><td>✓</td><td>33</td></tr>
+<tr><td>EndoMapper-Sim</td><td>✓</td><td></td><td>✓</td><td></td><td>✓</td><td>✓</td><td>5</td></tr>
+<tr><td>Sano</td><td></td><td>✓</td><td>✓</td><td></td><td>✓</td><td>✓</td><td>1,938</td></tr>
+<tr><td>StereoMIS</td><td></td><td>✓</td><td></td><td>✓</td><td>✓†</td><td>✓</td><td>354</td></tr>
+<tr><td>SCARED</td><td></td><td>✓</td><td></td><td>✓</td><td>✓</td><td>✓</td><td>34</td></tr>
+<tr><td>Hamlyn</td><td></td><td>✓</td><td></td><td>✓</td><td>✓</td><td></td><td>22</td></tr>
+<tr><td>RealSynCol</td><td>✓</td><td></td><td>✓</td><td></td><td>✓</td><td>✓</td><td>9</td></tr>
+<tr><td>SCOPE-colon-phantom (new)</td><td>✓</td><td></td><td></td><td>✓</td><td></td><td>✓</td><td>14</td></tr>
+<tr><td>SCOPE-colon-real (new)</td><td>✓</td><td></td><td></td><td>✓</td><td></td><td></td><td>10</td></tr>
+<tr class="ours"><td><b>SCOPE-5K</b></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td><b>4,910</b></td></tr>
+</tbody></table>
+<p class="cap">† annotations generated by our pipeline.</p>
+
+<details><summary>Quality-control examples: one clip per verdict</summary>
+<div class="frame wide"><video class="gv " data-src="assets/qc_accept.mp4" data-frames="234" data-fps="10" muted playsinline preload="none" data-bytes="1573982" data-codec="avc1.64001F" width="1544" height="440"></video></div>
+<p class="cap"><b>Accept</b></p>
+<div class="frame wide"><video class="gv " data-src="assets/qc_borderline.mp4" data-frames="202" data-fps="10" muted playsinline preload="none" data-bytes="1479536" data-codec="avc1.64001F" width="1600" height="316"></video></div>
+<p class="cap"><b>Borderline</b></p>
+<div class="frame wide"><video class="gv " data-src="assets/qc_reject.mp4" data-frames="146" data-fps="10" muted playsinline preload="none" data-bytes="719156" data-codec="avc1.64001F" width="1600" height="316"></video></div>
+<p class="cap"><b>Reject</b></p>
+</details>
+</section>
+
+<section id="results">
+<h2>Results</h2>
+
+<h3>Geometry and camera stability <span class="pill">Hamlyn, out-of-domain</span></h3>
+<div class="frame wide"><video class="gv " data-src="assets/geometry_hamlyn05.mp4" data-frames="150" data-fps="10" muted playsinline preload="none" data-bytes="1103195" data-codec="avc1.64001F" width="1600" height="272"></video></div>
+<details><summary>More examples: EndoMapper-Real; StereoMIS; SCOPE-colon-phantom</summary>
+<div class="frame wide"><video class="gv " data-src="assets/geometry_emreal_c018.mp4" data-frames="117" data-fps="10" muted playsinline preload="none" data-bytes="551421" data-codec="avc1.64001F" width="1600" height="260"></video></div><p class="cap">EndoMapper-Real</p>
+<div class="frame wide"><video class="gv " data-src="assets/geometry_emreal_c003.mp4" data-frames="63" data-fps="10" muted playsinline preload="none" data-bytes="733588" data-codec="avc1.64001F" width="1600" height="366"></video></div><p class="cap">EndoMapper-Real</p>
+<div class="frame wide"><video class="gv " data-src="assets/geometry_stereomis_p2_2.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="359253" data-codec="avc1.64001F" width="1600" height="312"></video></div><p class="cap">StereoMIS</p>
+<div class="frame wide"><video class="gv " data-src="assets/geometry_phantom00.mp4" data-frames="128" data-fps="10" muted playsinline preload="none" data-bytes="418478" data-codec="avc1.64001F" width="1600" height="320"></video></div><p class="cap">SCOPE-colon-phantom</p></details>
+
+<h3>3D tissue tracking <span class="pill">StereoMIS</span></h3>
+<div class="trkgrid wide" data-group="trk-p21">
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p2_1_input.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="198000" data-codec="avc1.640016" width="512" height="410"></video><div class="lab">Input video</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p2_1_scope4d.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="494831" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p2_1_sm4rt.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="695485" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">SM4RT</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p2_1_d4rt.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="545134" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">D4RT*</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p2_1_arc4rc.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="299010" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">4RC</div></div>
+<div class="gbar span-all" data-for="trk-p21"></div>
+</div>
+<p class="cap">Liver breathing</p>
+<div class="trkgrid wide" data-group="trk-p3">
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p3_input.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="201170" data-codec="avc1.640016" width="512" height="410"></video><div class="lab">Input video</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p3_scope4d.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="768428" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">SCOPE-4D (Ours)</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p3_sm4rt.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="838381" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">SM4RT</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p3_d4rt.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="1410490" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">D4RT*</div></div>
+<div class="trk-tile"><video class="gv" data-src="assets/tracking_p3_arc4rc.mp4" data-frames="64" data-fps="10" muted playsinline preload="none" data-bytes="235319" data-codec="avc1.640016" width="720" height="576"></video><div class="lab">4RC</div></div>
+<div class="gbar span-all" data-for="trk-p3"></div>
+</div>
+<p class="cap">Instrument pulling tissue</p>
+
+<h3>Long-sequence colon reconstruction <span class="pill">RealSynCol, 701 views</span></h3>
+<h4 class="tabsub">Interactive demo</h4>
+<div class="long-viewer wide" data-seq="Colon_2_forward" data-method="crm" data-height="540"></div>
+<h4 class="tabsub">Comparison</h4>
+<div class="frame wide"><img src="assets/long_colon2_clouds.png" alt="Colon 2 point clouds"></div>
+<div class="frame wide"><img src="assets/long_colon2_traj.png" alt="Colon 2 trajectories"></div><p class="cap legend"><span class="lg-pred"></span> Predicted trajectory<span class="lg-gap"></span><span class="lg-gt"></span> GT trajectory</p>
+
+<h3>Quantitative results</h3>
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-t="t1">Geometry</button>
+<button role="tab" aria-selected="false" data-t="t2">Tracking</button>
+<button role="tab" aria-selected="false" data-t="t3">Ablations, long &amp; user study</button>
+</div>
+<div class="tab on" id="t1">
+<table>
+<thead>
+<tr><th rowspan="3">Method</th><th colspan="5">In-domain average</th><th colspan="4">Hamlyn (OOD)</th><th colspan="3">SCOPE-colon-phantom (OOD)</th></tr>
+<tr><th colspan="3">Pose</th><th colspan="2">Depth</th><th colspan="2">Pose</th><th colspan="2">Depth</th><th colspan="3">Pose</th></tr>
+<tr><th>AUC@5°↑</th><th>AUC@30°↑</th><th>ATE↓</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th><th>ATE↓</th><th>ARE↓</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th><th>ATE↓</th><th>RTE↓</th><th>ARE*↓</th></tr>
+</thead><tbody>
+<tr class="grp"><td colspan="13">General-domain</td></tr>
+<tr><td>VGGT</td><td>2.94</td><td>29.11</td><td>0.128</td><td>0.160</td><td>74.61</td><td>4.610</td><td>1.964</td><td>0.190</td><td>69.19</td><td>16.53</td><td>16.78</td><td>12.14</td></tr>
+<tr><td>VGGT-Ω</td><td>7.81</td><td>48.07</td><td>0.049</td><td>0.093</td><td>91.07</td><td>4.496</td><td>1.746</td><td>0.135</td><td>80.82</td><td>8.54</td><td class="u">10.79</td><td>8.22</td></tr>
+<tr><td>MapAnything</td><td>2.63</td><td>26.22</td><td>0.122</td><td>0.141</td><td>85.00</td><td>4.984</td><td>1.960</td><td>0.166</td><td>74.15</td><td>15.98</td><td>17.70</td><td>26.98</td></tr>
+<tr><td>CUT3R</td><td>0.27</td><td>15.55</td><td>0.131</td><td>0.300</td><td>54.06</td><td>4.571</td><td>1.693</td><td>0.185</td><td>70.27</td><td>13.64</td><td>16.56</td><td>22.48</td></tr>
+<tr><td>SpatialTrackerV2</td><td>6.01</td><td>44.85</td><td>0.058</td><td>0.113</td><td>86.98</td><td>5.499</td><td>2.241</td><td>0.142</td><td>77.42</td><td>10.92</td><td>13.80</td><td>11.23</td></tr>
+<tr><td>4RC</td><td>6.12</td><td>41.85</td><td>0.068</td><td>0.138</td><td>79.71</td><td>3.639</td><td>1.438</td><td class="b">0.120</td><td class="u">84.26</td><td>13.98</td><td>15.33</td><td>9.13</td></tr>
+<tr><td>Any4D</td><td>0.29</td><td>11.18</td><td>0.160</td><td>0.215</td><td>65.25</td><td>4.755</td><td>1.114</td><td>0.167</td><td>72.23</td><td>16.94</td><td>17.57</td><td>12.15</td></tr>
+<tr><td>SM4RT</td><td>4.86</td><td>38.72</td><td>0.087</td><td>0.147</td><td>77.78</td><td>3.517</td><td>1.350</td><td class="b">0.120</td><td>83.94</td><td>14.46</td><td>15.50</td><td>9.17</td></tr>
+<tr class="grp"><td colspan="13">Endoscopy-specific</td></tr>
+<tr><td>Endo3R</td><td>0.26</td><td>11.14</td><td>0.179</td><td>0.185</td><td>70.06</td><td>20.982</td><td>9.492</td><td>0.223</td><td>62.77</td><td>16.42</td><td>17.05</td><td>16.13</td></tr>
+<tr><td>AF-SfMLearner</td><td>1.45</td><td>20.76</td><td>0.134</td><td>0.253</td><td>56.94</td><td>15.562</td><td>5.979</td><td>0.190</td><td>68.20</td><td>10.35</td><td>13.88</td><td>10.31</td></tr>
+<tr><td>EndoDAC</td><td>1.41</td><td>19.08</td><td>0.130</td><td>0.201</td><td>66.22</td><td>18.057</td><td>8.968</td><td>0.191</td><td>68.87</td><td>11.51</td><td>15.03</td><td>10.54</td></tr>
+<tr><td>Endo-FASt3R</td><td>4.13</td><td>35.02</td><td>0.062</td><td>0.230</td><td>60.39</td><td>9.152</td><td>3.794</td><td>0.211</td><td>64.75</td><td>8.70</td><td>11.39</td><td>9.22</td></tr>
+<tr class="ours"><td><b>SCOPE-4D<sub>SFT</sub> (Ours)</b></td><td class="u">29.44</td><td class="u">67.33</td><td class="b">0.016</td><td class="u">0.042</td><td class="u">98.52</td><td class="b">2.927</td><td class="u">1.014</td><td>0.129</td><td>83.77</td><td class="u">8.41</td><td class="b">10.71</td><td class="u">7.37</td></tr>
+<tr class="ours"><td><b>SCOPE-4D (Ours)</b></td><td class="b">29.86</td><td class="b">67.41</td><td class="u">0.017</td><td class="b">0.040</td><td class="b">98.68</td><td class="u">2.976</td><td class="b">1.013</td><td class="u">0.124</td><td class="b">85.23</td><td class="b">8.29</td><td>10.82</td><td class="b">7.21</td></tr>
+</tbody></table>
+<p class="cap">Camera and depth. Hamlyn depth excludes instruments. <b>Bold</b> best, <u>underline</u> second.</p>
+</div>
+<div class="tab" id="t2">
+<table>
+<thead>
+<tr><th rowspan="3">Method</th><th colspan="7">Sano</th><th colspan="7">StereoMIS</th></tr>
+<tr><th colspan="2">Tracking</th><th colspan="3">Pose</th><th colspan="2">Depth</th><th colspan="2">Tracking</th><th colspan="3">Pose</th><th colspan="2">Depth</th></tr>
+<tr><th>EPE↓</th><th>APD↑</th><th>ATE↓</th><th>RTE↓</th><th>RRE↓</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th><th>EPE↓</th><th>APD↑</th><th>ATE↓</th><th>RTE↓</th><th>RRE↓</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th></tr>
+</thead><tbody>
+<tr><td>D4RT*</td><td>2.035</td><td>72.94</td><td>0.014</td><td>0.239</td><td>0.215</td><td>0.193</td><td>65.76</td><td>7.540</td><td>34.12</td><td>0.043</td><td>0.940</td><td>0.344</td><td>0.147</td><td>87.20</td></tr>
+<tr><td>SpatialTrackerV2</td><td>0.933</td><td>90.58</td><td>0.017</td><td>0.223</td><td>0.125</td><td class="u">0.145</td><td class="u">78.76</td><td>6.870</td><td>38.98</td><td>0.049</td><td>0.677</td><td>0.195</td><td class="u">0.107</td><td class="u">95.24</td></tr>
+<tr><td>4RC</td><td>0.523</td><td>94.72</td><td class="u">0.006</td><td class="u">0.100</td><td class="u">0.062</td><td>0.186</td><td>66.15</td><td class="u">6.266</td><td class="u">44.28</td><td>0.039</td><td>0.481</td><td class="u">0.146</td><td>0.114</td><td>90.42</td></tr>
+<tr><td>Any4D</td><td>0.535</td><td>94.41</td><td>0.010</td><td>0.376</td><td>0.309</td><td>0.188</td><td>66.01</td><td>7.277</td><td>42.45</td><td>0.061</td><td>2.203</td><td>0.765</td><td>0.144</td><td>82.72</td></tr>
+<tr><td>SM4RT</td><td class="b">0.411</td><td class="u">95.64</td><td>0.007</td><td>0.104</td><td>0.081</td><td>0.182</td><td>67.31</td><td>6.276</td><td>43.95</td><td class="u">0.025</td><td class="u">0.427</td><td>0.158</td><td>0.116</td><td>92.57</td></tr>
+<tr class="ours"><td><b>SCOPE-4D (Ours)</b></td><td class="u">0.442</td><td class="b">96.11</td><td class="b">0.001</td><td class="b">0.054</td><td class="b">0.051</td><td class="b">0.033</td><td class="b">99.75</td><td class="b">5.022</td><td class="b">53.08</td><td class="b">0.010</td><td class="b">0.211</td><td class="b">0.114</td><td class="b">0.050</td><td class="b">98.80</td></tr>
+</tbody></table>
+<p class="cap">3D tracking (mm) and geometry. D4RT* is an open-source reproduction.</p>
+</div>
+<div class="tab" id="t3">
+<h4 class="tabsub">Ablation: training data</h4>
+<table>
+<thead><tr><th rowspan="3">Training data</th><th colspan="4">In-domain average</th><th colspan="2">Hamlyn (OOD)</th><th colspan="2">SCOPE-colon-phantom (OOD)</th></tr>
+<tr><th colspan="2">Pose</th><th colspan="2">Depth</th><th colspan="2">Depth</th><th colspan="2">Pose</th></tr>
+<tr><th>AUC@5°↑</th><th>AUC@30°↑</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th><th>RTE↓</th><th>ARE*↓</th></tr></thead>
+<tbody>
+<tr><td>No finetune (VGGT-Ω weights)</td><td>9.55</td><td>53.03</td><td>0.077</td><td>94.03</td><td>0.135</td><td>80.82</td><td>10.79</td><td>8.22</td></tr>
+<tr><td>SC+SIM+C3VD+EM-S+SA</td><td>35.99</td><td class="b">74.08</td><td class="u">0.031</td><td>99.50</td><td>0.143</td><td>80.93</td><td>11.28</td><td class="u">7.12</td></tr>
+<tr><td>+ StereoMIS</td><td>33.10</td><td>70.02</td><td>0.032</td><td>99.53</td><td>0.142</td><td>81.40</td><td class="u">10.51</td><td class="b">6.83</td></tr>
+<tr><td>+ EndoMapper-Real</td><td class="b">36.62</td><td class="u">74.07</td><td>0.032</td><td class="u">99.57</td><td class="b">0.128</td><td class="u">83.04</td><td class="b">10.37</td><td>7.37</td></tr>
+<tr class="ours"><td><b>Full dataset</b></td><td class="u">36.02</td><td>73.68</td><td class="b">0.030</td><td class="b">99.59</td><td class="u">0.129</td><td class="b">83.77</td><td>10.71</td><td>7.37</td></tr>
+</tbody></table>
+<p class="cap">Data composition, geometric fine-tuning only. Hamlyn depth excludes instruments. SC: SCARED, SIM: SimCol3D, EM-S: EndoMapper-Sim, SA: Sano.</p>
+
+<h4 class="tabsub">Ablation: motion representation</h4>
+<div class="half"><table>
+<thead><tr><th rowspan="2">Variant</th><th colspan="2">Tracking</th><th colspan="2">Pose</th><th colspan="2">Depth</th></tr>
+<tr><th>EPE↓</th><th>APD↑</th><th>AUC@5°↑</th><th>AUC@30°↑</th><th>AbsRel↓</th><th>δ<sub>1.25</sub>↑</th></tr></thead>
+<tbody>
+<tr><td>SoM (baseline)</td><td>5.94</td><td>46.58</td><td>5.67</td><td>26.86</td><td>0.050</td><td class="u">98.82</td></tr>
+<tr><td>w/ zero-motion anchor</td><td class="u">5.30</td><td class="u">50.11</td><td class="u">6.09</td><td class="u">27.17</td><td class="b">0.048</td><td class="u">98.82</td></tr>
+<tr class="ours"><td><b>Full CRM</b></td><td class="b">5.27</td><td class="b">52.63</td><td class="b">6.96</td><td class="b">27.66</td><td class="u">0.049</td><td class="b">98.85</td></tr>
+</tbody></table>
+
+</div>
+<div class="two res2">
+<div><h4 class="tabsub">Long-sequence reconstruction</h4><table>
+<thead><tr><th>Method</th><th>ATE↓</th><th>RTE↓</th><th>RRE↓</th></tr></thead>
+<tbody>
+<tr><td>VGGT</td><td>93.21</td><td>23.65</td><td>15.11</td></tr>
+<tr><td>VGGT-Ω</td><td>85.92</td><td>21.67</td><td>31.21</td></tr>
+<tr><td>SM4RT</td><td>88.95</td><td>21.29</td><td>16.98</td></tr>
+<tr><td>Endo3R</td><td>77.87</td><td>14.75</td><td>22.92</td></tr>
+<tr class="ours"><td><b>SCOPE-4D<sub>SFT</sub> (Ours)</b></td><td class="u">73.52</td><td class="b">10.38</td><td class="b">13.38</td></tr>
+<tr class="ours"><td><b>SCOPE-4D (Ours)</b></td><td class="b">71.17</td><td class="u">10.94</td><td class="u">13.61</td></tr>
+</tbody></table>
+
+</div>
+<div><h4 class="tabsub">User study</h4><table class="ustable">
+<thead><tr><th>Method</th><th>Camera trajectory↓</th><th>Point cloud↓</th><th>Depth map↓</th></tr></thead>
+<tbody>
+<tr><td>VGGT-Ω</td><td>1.93 <span class="ci">[1.65, 2.25]</span></td><td>1.95 <span class="ci">[1.65, 2.28]</span></td><td>1.98 <span class="ci">[1.67, 2.32]</span></td></tr>
+<tr><td>SM4RT</td><td>2.90 <span class="ci">[2.60, 3.08]</span></td><td>3.22 <span class="ci">[2.80, 3.57]</span></td><td>3.33 <span class="ci">[2.87, 3.73]</span></td></tr>
+<tr><td>Endo3R</td><td>3.83 <span class="ci">[3.53, 4.00]</span></td><td>3.52 <span class="ci">[3.23, 3.78]</span></td><td>3.37 <span class="ci">[3.00, 3.70]</span></td></tr>
+<tr class="ours"><td><b>SCOPE-4D (Ours)</b></td><td><b>1.33</b> <span class="ci">[1.12, 1.62]</span></td><td><b>1.32</b> <span class="ci">[1.13, 1.55]</span></td><td><b>1.32</b> <span class="ci">[1.13, 1.53]</span></td></tr>
+</tbody></table>
+<p class="cap">SCOPE-colon-real: mean rank from six researchers on ten clips (1 best, 4 worst), 95% bootstrap intervals.</p>
+<details class="usd"><summary>Study interface</summary><figure><img src="assets/user_study_case.png" alt="User study comparison page"><img src="assets/user_study_instructions.png" alt="User study ranking criteria" style="margin-top:8px"></figure></details></div>
+</div>
+</div>
+
+
+</section>
+
+
+</div>
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/vendor/OrbitControls.js"></script>
+<script>
+(function(){ const el=document.querySelector('.long-viewer'); if(!el) return; const files=["assets/long/long_Colon_2_forward__crm.js", "assets/long/long_Colon_2_forward__endo3r.js", "assets/long/long_Colon_2_forward__gt.js", "assets/long/long_Colon_2_forward__omega_sft.js", "assets/long/long_Colon_2_forward__pre_omega.js", "assets/long/long_Colon_2_forward__pre_vggt.js", "assets/long/long_Colon_2_forward__sm4rt.js"];
+ el.innerHTML='<div class="lv-loading">loading 3D viewer data…</div>'; const msg=t=>{ const l=el.querySelector('.lv-loading'); if(l) l.textContent=t; };
+ // each data file is retried with growing delays (a failed file used to be skipped silently); the container keeps
+ // the viewer's final height (CSS .long-viewer min-height) so nothing below moves when the viewer appears
+ const one=(f,k)=>new Promise(r=>{ const go1=a=>{ const sc=document.createElement('script'); sc.src=f; sc.onload=r;
+   sc.onerror=()=>{ sc.remove(); const d=[2,4,8,16,30,60][Math.min(a,5)]; msg(`3D viewer data: reconnecting… (${k}/${files.length}, next try in ${d} s)`); setTimeout(()=>go1(a+1),d*1000); };
+   document.body.appendChild(sc); }; go1(0); });
+ const go=()=>{ let n=0; files.concat(['assets/long_viewer.js']).reduce((pr,f)=>pr.then(()=>{ if(f.includes('long_')) msg(`loading 3D viewer data… ${++n}/${files.length}`); return one(f,n); }), Promise.resolve()).then(()=>{ const l=el.querySelector('.lv-loading'); if(l) l.remove(); }); };
+ const io=new IntersectionObserver(es=>{ if(es[0].isIntersecting){ io.disconnect(); go(); } }, {rootMargin:'600px 0px'}); io.observe(el); })();
+</script>
+<button id="pauseAll" class="pauseall" type="button" aria-pressed="false" title="Pauses every video; videos you paused yourself stay paused on resume">❚❚ Pause all videos</button>
+<script>window.SCOPE_GROUPS={"hero1": {"sync": "StereoMIS P3__ev_9100_9467 win64"}, "hero2": {"sync": "EndoMapper-Real Seq_001__c014 sub128"}, "hero3a": {"sync": "StereoMIS P3__ev_9100_9467 win64"}, "hero3b": {"sync": "StereoMIS P2_1__ev_1_247 win64"}, "trk-p21": {"sync": "StereoMIS P2_1__ev_1_247 win64"}, "trk-p3": {"sync": "StereoMIS P3__ev_9100_9467 win64"}};</script>
+<script src="assets/player.js"></script>
+<script>
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected','false'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.setAttribute('aria-selected','true');document.getElementById(b.dataset.t).classList.add('on');
+}));
+</script>
+</body></html>
